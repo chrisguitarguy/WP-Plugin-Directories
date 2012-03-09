@@ -39,7 +39,7 @@ function cd_apd_load_more()
         {
             if( file_exists( $wp_plugin_directories[$key]['dir'] . '/' . $a ) )
             {
-                require_once( $wp_plugin_directories[$key]['dir'] . '/' . $a );
+                include_once( $wp_plugin_directories[$key]['dir'] . '/' . $a );
             }
         }
     }
@@ -111,7 +111,7 @@ function cd_apd_get_plugins( $dir_key )
 		if ( empty ( $plugin_data['Name'] ) )
 			continue;
 
-		$wp_plugins[plugin_basename( $plugin_file )] = $plugin_data;
+		$wp_plugins[trim( $plugin_file )] = $plugin_data;
 	}
 
 	uasort( $wp_plugins, '_sort_uname_callback' );

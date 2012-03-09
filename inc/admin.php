@@ -17,6 +17,11 @@ class CD_APD_Admin
      */
     protected $all_count = 0;
     
+    /**
+     * constructor
+     * 
+     * @since 0.1
+     */
     function __construct()
     {
         add_action( 'load-plugins.php', array( &$this, 'init' ) );
@@ -67,7 +72,6 @@ class CD_APD_Admin
             add_filter( 'plugin_action_links', array( &$this, 'action_links' ), 10, 2 );
             add_action( 'admin_enqueue_scripts', array( &$this, 'scripts' ) );
         }
-        
     }
     
     /**
@@ -86,7 +90,7 @@ class CD_APD_Admin
         foreach( $wp_plugin_directories as $key => $info )
         {
             if( ! count( $this->plugins[$key] ) ) continue;
-            $class = isset( $_REQUEST['plugin_status'] ) && $key == $_REQUEST['plugin_status'] ? ' class="current" ' : '';
+            $class = $this->get_plugin_status() == $key ? ' class="current" ' : '';
             $views[$key] = sprintf( 
                 '<a href="%s"' . $class . '>%s <span class="count">(%d)</span></a>',
                 add_query_arg( 'plugin_status', $key, 'plugins.php' ),
@@ -111,10 +115,9 @@ class CD_APD_Admin
      */
     function filter_plugins( $plugins )
     {
-        $this->all_count = count( $plugins );
-        
         if( $key = $this->get_plugin_status() )
         {
+            $this->all_count = count( $plugins );
             $plugins = $this->plugins[$key];
         }
         return $plugins;
