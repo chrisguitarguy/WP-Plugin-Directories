@@ -19,7 +19,3 @@ if( is_admin() )
 {
     require_once( CD_APD_PATH . 'inc/admin.php' );
 }
-
-register_plugin_directory( 'library', 'lib', __( 'Library' ) );
-
-register_plugin_directory( 'library2', 'lib2', __( 'Library 2' ) );
