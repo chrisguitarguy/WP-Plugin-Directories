@@ -32,6 +32,7 @@ add_action( 'plugins_loaded', 'cd_apd_load_more', 99 );
 function cd_apd_load_more()
 {
     global $wp_plugin_directories;
+    if( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
     foreach( array_keys( $wp_plugin_directories) as $key )
     {
         $active = get_option( 'active_plugins_' . $key, array() );
