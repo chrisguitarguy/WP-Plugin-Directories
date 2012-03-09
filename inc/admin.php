@@ -68,7 +68,7 @@ class CD_APD_Admin
             add_filter( 'views_' . $screen->id, array( &$this, 'views_again' ) );
             add_filter( 'all_plugins', array( &$this, 'filter_plugins' ) );
             // TODO: support bulk actions
-            add_filter( 'bulk_actions-' . $screen->id, array( &$this, 'kill_bulk' ) );
+            add_filter( 'bulk_actions-' . $screen->id, '__return_empty_array' );
             add_filter( 'plugin_action_links', array( &$this, 'action_links' ), 10, 2 );
             add_action( 'admin_enqueue_scripts', array( &$this, 'scripts' ) );
         }
@@ -121,14 +121,6 @@ class CD_APD_Admin
             $plugins = $this->plugins[$key];
         }
         return $plugins;
-    }
-    
-    /**
-     * Kill the bull actions by returning an empty array
-     */
-    function kill_bulk()
-    {
-        return array();
     }
     
     /**
