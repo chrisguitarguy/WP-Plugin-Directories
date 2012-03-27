@@ -182,6 +182,7 @@ class CD_APD_Admin
     function get_plugins()
     {
         global $wp_plugin_directories;
+        if( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
         foreach( array_keys( $wp_plugin_directories ) as $key )
         {
            $this->plugins[$key] = cd_apd_get_plugins( $key );
