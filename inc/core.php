@@ -1,4 +1,7 @@
 <?php
+! defined( 'ABSPATH' ) && exit();
+
+
 /**
  * The central API: registers a new plugin directory
  * 
@@ -9,18 +12,18 @@
  */
 function register_plugin_directory( $key, $dir, $label )
 {
-    global $wp_plugin_directories;
-    if( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
-    
-    if( ! file_exists( $dir ) && file_exists( trailingslashit( WP_CONTENT_DIR ) . $dir ) )
-    {
-        $dir = trailingslashit( WP_CONTENT_DIR ) . $dir;
-    }
-    
-    $wp_plugin_directories[$key] = array(
-        'label' => $label,
-        'dir'   => $dir
-    );
+	global $wp_plugin_directories;
+	if ( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
+
+	if ( ! file_exists( $dir ) && file_exists( trailingslashit( WP_CONTENT_DIR ) . $dir ) )
+	{
+		$dir = trailingslashit( WP_CONTENT_DIR ) . $dir;
+	}
+
+	$wp_plugin_directories[$key] = array(
+		'label' => $label,
+		'dir'   => $dir
+	);
 }
 
 add_action( 'plugins_loaded', 'cd_apd_load_more', 99 );
@@ -31,20 +34,21 @@ add_action( 'plugins_loaded', 'cd_apd_load_more', 99 );
  */
 function cd_apd_load_more()
 {
-    global $wp_plugin_directories;
-    if( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
-    foreach( array_keys( $wp_plugin_directories) as $key )
-    {
-        $active = get_option( 'active_plugins_' . $key, array() );
-        foreach( $active as $a )
-        {
-            if( file_exists( $wp_plugin_directories[$key]['dir'] . '/' . $a ) )
-            {
-                include_once( $wp_plugin_directories[$key]['dir'] . '/' . $a );
-            }
-        }
-    }
+	global $wp_plugin_directories;
+	if ( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
+	foreach ( array_keys( $wp_plugin_directories) as $key )
+	{
+		$active = get_option( 'active_plugins_' . $key, array() );
+		foreach( $active as $a )
+		{
+			if( file_exists( $wp_plugin_directories[$key]['dir'] . '/' . $a ) )
+			{
+				include_once( $wp_plugin_directories[$key]['dir'] . '/' . $a );
+			}
+		}
+	}
 }
+
 
 /**
  * Get the valid plugins from the custom directory
@@ -55,18 +59,18 @@ function cd_apd_load_more()
  */
 function cd_apd_get_plugins( $dir_key ) 
 {
-    global $wp_plugin_directories;
-    
-    // invalid dir key? bail
-    if( ! isset( $wp_plugin_directories[$dir_key] ) )
-    {
-        return array();
-    }
-    else
-    {
-        $plugin_root = $wp_plugin_directories[$dir_key]['dir'];
-    }
-    
+	global $wp_plugin_directories;
+
+	// invalid dir key? bail
+	if ( ! isset( $wp_plugin_directories[$dir_key] ) )
+	{
+		return array();
+	}
+	else
+	{
+		$plugin_root = $wp_plugin_directories[$dir_key]['dir'];
+	}
+
 	if ( ! $cache_plugins = wp_cache_get( 'plugins', 'plugins') )
 		$cache_plugins = array();
 
@@ -129,11 +133,11 @@ function cd_apd_get_plugins( $dir_key )
 function cd_apd_activate_plugin( $plugin, $context, $silent = false ) 
 {
 	$plugin = trim( $plugin );
-    
-    $redirect = add_query_arg( 'plugin_status', $context, admin_url( 'plugins.php' ) );
-    $redirect = apply_filters( 'custom_plugin_redirect', $redirect );
 
-    $current = get_option( 'active_plugins_' . $context, array() );
+	$redirect = add_query_arg( 'plugin_status', $context, admin_url( 'plugins.php' ) );
+	$redirect = apply_filters( 'custom_plugin_redirect', $redirect );
+
+	$current = get_option( 'active_plugins_' . $context, array() );
 
 	$valid = cd_apd_validate_plugin( $plugin, $context );
 	if ( is_wp_error( $valid ) )
@@ -150,9 +154,9 @@ function cd_apd_activate_plugin( $plugin, $context, $silent = false )
 			do_action( 'custom_activate_' . $plugin, $context );
 		}
 
-        $current[] = $plugin;
-        sort( $current );
-        update_option( 'active_plugins_' . $context, $current );
+		$current[] = $plugin;
+		sort( $current );
+		update_option( 'active_plugins_' . $context, $current );
 
 		if ( ! $silent ) {
 			do_action( 'custom_activated_plugin', $plugin, $context );
@@ -176,17 +180,17 @@ function cd_apd_deactivate_plugins( $plugins, $context, $silent = false ) {
 	$current = get_option( 'active_plugins_' . $context, array() );
 
 	foreach ( (array) $plugins as $plugin ) 
-    {
+	{
 		$plugin = trim( $plugin );
 		if ( ! in_array( $plugin, $current ) ) continue;
 
 		if ( ! $silent )
 			do_action( 'custom_deactivate_plugin', $plugin, $context );
 
-        $key = array_search( $plugin, $current );
-        if ( false !== $key ) {
-            array_splice( $current, $key, 1 );
-        }
+		$key = array_search( $plugin, $current );
+		if ( false !== $key ) {
+			array_splice( $current, $key, 1 );
+		}
 
 		if ( ! $silent ) {
 			do_action( 'custom_deactivate_' . $plugin, $context );
@@ -194,7 +198,7 @@ function cd_apd_deactivate_plugins( $plugins, $context, $silent = false ) {
 		}
 	}
 
-    update_option( 'active_plugins_' . $context, $current );
+	update_option( 'active_plugins_' . $context, $current );
 }
 
 
@@ -206,30 +210,30 @@ function cd_apd_deactivate_plugins( $plugins, $context, $silent = false ) {
  */
 function cd_apd_validate_plugin( $plugin, $context ) 
 {
-    $rv = true;
+	$rv = true;
 	if ( validate_file( $plugin ) )
-    {
+	{
 		$rv = new WP_Error('plugin_invalid', __('Invalid plugin path.'));
-    }
-    
-    global $wp_plugin_directories;
-    if( ! isset( $wp_plugin_directories[$context] ) )
-    {
-        $rv = new WP_Error( 'invalid_context', __( 'The context for this plugin does not exist' ) );
-    }
-    
-    $dir = $wp_plugin_directories[$context]['dir'];
-	if( ! file_exists( $dir . '/' . $plugin) )
-    {
+	}
+
+	global $wp_plugin_directories;
+	if ( ! isset( $wp_plugin_directories[$context] ) )
+	{
+		$rv = new WP_Error( 'invalid_context', __( 'The context for this plugin does not exist' ) );
+	}
+	
+	$dir = $wp_plugin_directories[$context]['dir'];
+	if ( ! file_exists( $dir . '/' . $plugin) )
+	{
 		$rv = new WP_Error( 'plugin_not_found', __( 'Plugin file does not exist.' ) );
-    }
+	}
 
 	$installed_plugins = cd_apd_get_plugins( $context );
 	if ( ! isset($installed_plugins[$plugin]) )
-    {
+	{
 		$rv = new WP_Error( 'no_plugin_header', __('The plugin does not have a valid header.') );
-    }
-    
-    $rv = $dir . '/' . $plugin;
+	}
+
+	$rv = $dir . '/' . $plugin;
 	return $rv;
 }
