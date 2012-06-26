@@ -14,9 +14,9 @@ License:     GPL2
 define( 'CD_APD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CD_APD_URL', plugin_dir_url( __FILE__ ) );
 
-require_once( CD_APD_PATH . 'inc/core.php' );
+require_once( CD_APD_PATH.'inc/core.php' );
 
 if( is_admin() )
 {
-	require_once( CD_APD_PATH . 'inc/admin.php' );
+	require_once( CD_APD_PATH.'inc/admin.php' );
 }

@@ -63,17 +63,17 @@ class CD_APD_Admin
 
 		$this->handle_actions();
 
-		add_filter( 'views_' . $screen->id, array( &$this, 'views' ) );
+		add_filter( "views_{$screen->id}", array( $this, 'views' ) );
 
 		// check to see if we're using one of our custom directories
 		if ( $this->get_plugin_status() )
 		{
-			add_filter( 'views_' . $screen->id, array( &$this, 'views_again' ) );
-			add_filter( 'all_plugins', array( &$this, 'filter_plugins' ) );
-			// TODO: support bulk actions
-			add_filter( 'bulk_actions-' . $screen->id, '__return_empty_array' );
-			add_filter( 'plugin_action_links', array( &$this, 'action_links' ), 10, 2 );
-			add_action( 'admin_enqueue_scripts', array( &$this, 'scripts' ) );
+			add_filter( "views_{$screen->id}", array( $this, 'views_again' ) );
+			add_filter( 'all_plugins', array( $this, 'filter_plugins' ) );
+			// @TODO: support bulk actions
+			add_filter( "bulk_actions-{$screen->id}", '__return_empty_array' );
+			add_filter( 'plugin_action_links', array( $this, 'action_links' ), 10, 2 );
+			add_action( 'admin_enqueue_scripts', array( $this, 'scripts' ) );
 		}
 	}
 
@@ -88,20 +88,24 @@ class CD_APD_Admin
 		global $wp_plugin_directories;
 
 		// bail if we don't have any extra dirs
-		if ( empty( $wp_plugin_directories ) ) return $views;
+		if ( empty( $wp_plugin_directories ) ) 
+			return $views;
 
 		// Add our directories to the action links
 		foreach ( $wp_plugin_directories as $key => $info )
 		{
-			if ( ! count( $this->plugins[$key] ) ) continue;
-			$class = $this->get_plugin_status() == $key ? ' class="current" ' : '';
-			$views[$key] = sprintf( 
-				'<a href="%s"' . $class . '>%s <span class="count">(%d)</span></a>',
+			if ( ! count( $this->plugins[$key] ) ) 
+				continue;
+
+			$views[ $key ] = sprintf( 
+				'<a href="%s"%s>%s <span class="count">(%d)</span></a>',
 				add_query_arg( 'plugin_status', $key, 'plugins.php' ),
+				$this->get_plugin_status() == $key ? ' class="current" ' : '',
 				esc_html( $info['label'] ),
-				count( $this->plugins[$key] )
+				count( $this->plugins[ $key ] )
 			);
 		}
+
 		return $views;
 	}
 
@@ -111,7 +115,9 @@ class CD_APD_Admin
 	 */
 	public function views_again( $views )
 	{
-		if ( isset( $views['inactive'] ) ) unset( $views['inactive'] );
+		if ( isset( $views['inactive'] ) ) 
+			unset( $views['inactive'] );
+
 		return $views;
 	}
 
@@ -124,8 +130,9 @@ class CD_APD_Admin
 		if ( $key = $this->get_plugin_status() )
 		{
 			$this->all_count = count( $plugins );
-			$plugins = $this->plugins[$key];
+			$plugins = $this->plugins[ $key] ;
 		}
+
 		return $plugins;
 	}
 
@@ -141,19 +148,26 @@ class CD_APD_Admin
 		$links = array();
 		$links['activate'] = sprintf(
 			'<a href="%s" title="Activate this plugin">%s</a>',
-			wp_nonce_url( 'plugins.php?action=custom_activate&amp;plugin=' . $plugin_file . '&amp;plugin_status=' . esc_attr( $context ), 'custom_activate-' . $plugin_file ),
+			wp_nonce_url( 
+				"plugins.php?action=custom_activate&amp;plugin={$plugin_file}&amp;plugin_status=".esc_attr( $context ), 
+				"custom_activate-{$plugin_file}" 
+			),
 			__( 'Activate' )
 		);
 
-		$active = get_option( 'active_plugins_' . $context, array() );
+		$active = get_option( "active_plugins_{$context}", array() );
 		if ( in_array( $plugin_file, $active ) )
 		{
 			$links['deactivate'] = sprintf(
 				'<a href="%s" title="Deactivate this plugin" class="cd-apd-deactivate">%s</a>',
-				wp_nonce_url( 'plugins.php?action=custom_deactivate&amp;plugin=' . $plugin_file . '&amp;plugin_status=' . esc_attr( $context ), 'custom_deactivate-' . $plugin_file ),
+				wp_nonce_url( 
+					"plugins.php?action=custom_deactivate&amp;plugin={$plugin_file}&amp;plugin_status=".esc_attr( $context ), 
+					"custom_deactivate-{$plugin_file}" 
+				),
 				__( 'Deactivate' )
 			);
 		}
+
 		return $links;
 	}
 
@@ -191,10 +205,12 @@ class CD_APD_Admin
 	public function get_plugins()
 	{
 		global $wp_plugin_directories;
-		if ( empty( $wp_plugin_directories ) ) $wp_plugin_directories = array();
+
+		empty( $wp_plugin_directories ) AND $wp_plugin_directories = array();
+
 		foreach ( array_keys( $wp_plugin_directories ) as $key )
 		{
-			$this->plugins[$key] = cd_apd_get_plugins( $key );
+			$this->plugins[ $key ] = cd_apd_get_plugins( $key );
 		}
 	}
 
@@ -214,7 +230,9 @@ class CD_APD_Admin
 
 		// Get the plugin we're going to activate
 		$plugin = isset( $_REQUEST['plugin'] ) ? $_REQUEST['plugin'] : false;
-		if ( ! $plugin ) return;
+
+		if ( ! $plugin )
+			return;
 
 		$context = $this->get_plugin_status();
 
@@ -224,15 +242,22 @@ class CD_APD_Admin
 				if ( ! current_user_can('activate_plugins') )
 					wp_die( __('You do not have sufficient permissions to manage plugins for this site.') );
 
-				check_admin_referer( 'custom_activate-' . $plugin );
+				check_admin_referer( "custom_activate-{$plugin}" );
 
 				$result = cd_apd_activate_plugin( $plugin, $context );
 				if ( is_wp_error( $result ) ) 
 				{
 					if ( 'unexpected_output' == $result->get_error_code() ) 
 					{
-						$redirect = add_query_arg( 'plugin_status', $context, self_admin_url( 'plugins.php' ) );
-						wp_redirect( add_query_arg( '_error_nonce', wp_create_nonce( 'plugin-activation-error_' . $plugin ), $redirect ) ) ;
+						wp_redirect( add_query_arg( 
+							'_error_nonce',
+							wp_create_nonce( "plugin-activation-error_{$plugin}" ),
+							add_query_arg( 
+								'plugin_status', 
+								$context, 
+								self_admin_url( 'plugins.php' ) 
+							) 
+						) );
 						exit();
 					}
 					else 
@@ -241,28 +266,33 @@ class CD_APD_Admin
 					}
 				}
 
-				wp_redirect( add_query_arg( array( 'plugin_status' => $context, 'activate' => 'true' ), self_admin_url( 'plugins.php' ) ) );
+				wp_redirect( add_query_arg( 
+					array( 'plugin_status' => $context, 'activate' => 'true' ), 
+					self_admin_url( 'plugins.php' ) 
+				) );
 				exit();
 				break;
 
 			case 'custom_deactivate':
 				if ( ! current_user_can( 'activate_plugins' ) )
-					wp_die( __('You do not have sufficient permissions to deactivate plugins for this site.') );
+					wp_die( __( 'You do not have sufficient permissions to deactivate plugins for this site.' ) );
 
-				check_admin_referer('custom_deactivate-' . $plugin);
+				check_admin_referer( "custom_deactivate-{$plugin}" );
 				cd_apd_deactivate_plugins( $plugin, $context );
 				if ( headers_sent() )
-					echo "<meta http-equiv='refresh' content='" . esc_attr( "0;url=plugins.php?deactivate=true&plugin_status=$status&paged=$page&s=$s" ) . "' />";
+					printf( 
+						"<meta http-equiv='refresh' content='%s' />",
+						esc_attr( "0;url=plugins.php?deactivate=true&plugin_status={$status}&paged={$page}&s={$s}" )
+					);
 				else
-					wp_redirect( self_admin_url("plugins.php?deactivate=true&plugin_status=$context") );
+					wp_redirect( self_admin_url("plugins.php?deactivate=true&plugin_status={$context}") );
 				exit();
 				break;
 
 			default:
-				do_action( 'custom_plugin_dir_' . $action );
+				do_action( "custom_plugin_dir_{$action}" );
 				break;
 		}
-
 	}
 
 
@@ -276,11 +306,17 @@ class CD_APD_Admin
 	public function get_plugin_status()
 	{
 		global $wp_plugin_directories;
+
 		$rv = false;
-		if ( isset( $_GET['plugin_status'] ) && in_array( $_GET['plugin_status'], array_keys( $wp_plugin_directories ) ) )
+
+		if ( 
+			isset( $_GET['plugin_status'] ) 
+			AND in_array( $_GET['plugin_status'], array_keys( $wp_plugin_directories ) ) 
+			)
 		{
 			$rv = $_GET['plugin_status'];
 		}
+
 		return $rv;
 	}
 } // end class
