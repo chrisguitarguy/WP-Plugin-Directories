@@ -258,7 +258,9 @@ class CD_APD_Admin extends CD_APD_Core
 	 */
 	public function scripts( $screen )
 	{
-_dump( $screen );
+		if ( 'plugins.php' !== $screen )
+			return;
+
 		wp_enqueue_script(
 			'cd-apd-js',
 			CD_APD_URL.'js/apd.js',
@@ -292,7 +294,6 @@ _dump( $screen );
 		{
 			$this->plugins[ $key ] = $this->get_plugins_from_cache( $key );
 		}
-#var_dump( $this->plugins );
 	}
 
 
