@@ -1,57 +1,116 @@
 <?php
-! defined( 'ABSPATH' ) && exit();
+! defined( 'ABSPATH' ) AND exit();
 
 
-class CD_APD_Admin
+
+if ( ! class_exists( 'CD_APD_Admin' ) )
+{
+	add_action( 'plugins_loaded', array( 'CD_APD_Admin', 'instance' ) );
+
+/**
+ * Admin/Factory
+ * 
+ * @author     Christopher Davis, Franz Josef Kaiser
+ * @license    GPL
+ * @copyright  © Christopher Davis, Franz Josef Kaiser 2011-2012
+ * 
+ * @package    WordPress
+ * @subpackage Additional Plugin Directories: Admin/Factory
+ */
+class CD_APD_Admin extends CD_APD_Core
 {
 	/**
+	 * Instance
+	 * 
+	 * @since  0.3
+	 * @access protected
+	 * @var    object
+	 */
+	protected static $instance;
+
+
+	/**
 	 * The container for all of our custom plugins
+	 * 
+	 * @since  0.1
+	 * @access protected
+	 * @var    array
 	 */
 	protected $plugins = array();
 
+
 	/**
 	 * What custom actions are we allowed to handle here?
+	 * 
+	 * @since  0.1
+	 * @access protected
+	 * @var    array
 	 */
 	protected $actions = array();
 
+
 	/**
 	 * The original count of the plugins
+	 * 
+	 * @since  0.1
+	 * @access protected
+	 * @var    int
 	 */
 	protected $all_count = 0;
+
+
+	/**
+	 * Creates a new static instance
+	 * 
+	 * @since  0.3
+	 * @static
+	 * @return void
+	 */
+	public static function instance()
+	{
+		null === self :: $instance AND self :: $instance = new self;
+		return self :: $instance;
+	}
+
 
 	/**
 	 * constructor
 	 * 
-	 * @since 0.1
+	 * @since  0.1
+	 * @return void
 	 */
 	public function __construct()
 	{
-		add_action( 'load-plugins.php', array( $this, 'init' ) );
 		add_action( 'plugins_loaded', array( $this, 'setup_actions' ), 1 );
+		add_action( 'load-plugins.php', array( $this, 'init' ) );
 	}
 
 
 	/**
 	 * Sets up which actions we can handle with this plugin. We'll use this
-	 * to catch activations and deactivations as the normal way won't work
+	 * to catch activations and deactivations as the normal way won't work.
+	 * Has the filter 'custom_plugin_actions' to allow extensions.
 	 * 
-	 * @since 0.1
+	 * @since  0.1
+	 * @return void
 	 */
 	public function setup_actions()
 	{
-		$tmp = array(
-			'custom_activate',
-			'custom_deactivate'
+		$this->actions = apply_filters( 
+			'custom_plugin_actions',
+			array(
+				'custom_activate',
+				'custom_deactivate'
+			)
 		);
-		$this->actions = apply_filters( 'custom_plugin_actions', $tmp );
 	}
 
 
 	/**
-	 * Makes the magic happen.  Loads all the other hooks to modify the
-	 * plugin list table
+	 * Makes the magic happen. Loads all the other hooks to modify the plugin list table
 	 * 
-	 * @since 0.1
+	 * @since  0.1
+	 * @return void
 	 */
 	public function init()
 	{
@@ -81,7 +140,9 @@ class CD_APD_Admin
 	/**
 	 * Adds our custom plugin directories to the list of plugin types
 	 *
-	 * @since 0.1
+	 * @since  0.1
+	 * @param  array $views
+	 * @return array $views
 	 */
 	public function views( $views )
 	{
@@ -94,7 +155,9 @@ class CD_APD_Admin
 		// Add our directories to the action links
 		foreach ( $wp_plugin_directories as $key => $info )
 		{
-			if ( ! count( $this->plugins[$key] ) ) 
+			$count = count( $this->plugins[ $key ] );
+
+			if ( ! $count ) 
 				continue;
 
 			$views[ $key ] = sprintf( 
@@ -102,7 +165,7 @@ class CD_APD_Admin
 				add_query_arg( 'plugin_status', $key, 'plugins.php' ),
 				$this->get_plugin_status() == $key ? ' class="current" ' : '',
 				esc_html( $info['label'] ),
-				count( $this->plugins[ $key ] )
+				$count
 			);
 		}
 
@@ -112,6 +175,10 @@ class CD_APD_Admin
 
 	/**
 	 * Unset inactive plugin link as it doesn't really work for this view
+	 * 
+	 * @since  0.1
+	 * @param  array $views
+	 * @return array $views
 	 */
 	public function views_again( $views )
 	{
@@ -124,10 +191,15 @@ class CD_APD_Admin
 
 	/**
 	 * Filters the plugins list to include all the plugins in our custom directory
+	 * 
+	 * @since  0.1
+	 * @param  array $plugins
+	 * @return array $plugins
 	 */
 	public function filter_plugins( $plugins )
 	{
-		if ( $key = $this->get_plugin_status() )
+		$key = $this->get_plugin_status();
+		if ( $key )
 		{
 			$this->all_count = count( $plugins );
 			$plugins = $this->plugins[ $key] ;
@@ -139,23 +211,32 @@ class CD_APD_Admin
 
 	/**
 	 * Correct some action links so we can actually "activate" plugins
+	 * 
+	 * @since  0.1
+	 * @param  array  $links
+	 * @param  string $plugin_file
+	 * @return array  $links
 	 */
 	public function action_links( $links, $plugin_file )
 	{
 		$context = $this->get_plugin_status();
 
+		$active = get_option( "active_plugins_{$context}", array() );
+
 		// let's just start over
 		$links = array();
-		$links['activate'] = sprintf(
-			'<a href="%s" title="Activate this plugin">%s</a>',
-			wp_nonce_url( 
-				"plugins.php?action=custom_activate&amp;plugin={$plugin_file}&amp;plugin_status=".esc_attr( $context ), 
-				"custom_activate-{$plugin_file}" 
-			),
-			__( 'Activate' )
-		);
+		if ( ! in_array( $plugin_file, $active ) )
+		{
+			$links['activate'] = sprintf(
+				'<a href="%s" title="Activate this plugin">%s</a>',
+				wp_nonce_url( 
+					"plugins.php?action=custom_activate&amp;plugin={$plugin_file}&amp;plugin_status=".esc_attr( $context ), 
+					"custom_activate-{$plugin_file}" 
+				),
+				__( 'Activate' )
+			);
+		}
 
-		$active = get_option( "active_plugins_{$context}", array() );
 		if ( in_array( $plugin_file, $active ) )
 		{
 			$links['deactivate'] = sprintf(
@@ -175,14 +256,18 @@ class CD_APD_Admin
 	/**
 	 * Enqueues on JS file for fun hacks
 	 * 
-	 * @since 0.1
-	 * @uses wp_enqueue_script
+	 * @since  0.1
+	 * @uses   wp_enqueue_script()
+	 * @return void
 	 */
-	public function scripts()
+	public function scripts( $screen )
 	{
+		if ( 'plugins.php' !== $screen )
+			return;
+
 		wp_enqueue_script(
 			'cd-apd-js',
-			CD_APD_URL . 'js/apd.js',
+			CD_APD_URL.'js/apd.js',
 			array( 'jquery' ),
 			null
 		);
@@ -199,8 +284,9 @@ class CD_APD_Admin
 	/**
 	 * Fetch all the custom plugins we have!
 	 * 
-	 * @since 0.1
-	 * @uses cd_adp_get_plugins To fetch all the custom plugins
+	 * @since  0.1
+	 * @uses   get_plugins_from_cache() To fetch all the custom plugins
+	 * @return void
 	 */
 	public function get_plugins()
 	{
@@ -210,7 +296,7 @@ class CD_APD_Admin
 
 		foreach ( array_keys( $wp_plugin_directories ) as $key )
 		{
-			$this->plugins[ $key ] = cd_apd_get_plugins( $key );
+			$this->plugins[ $key ] = $this->get_plugins_from_cache( $key );
 		}
 	}
 
@@ -219,7 +305,8 @@ class CD_APD_Admin
 	 * Handle activations and deactivations as the standard way will
 	 * fail with "plugin file does not exist
 	 *
-	 * @since 0.1
+	 * @since  0.1
+	 * @return void
 	 */
 	public function handle_actions()
 	{
@@ -240,11 +327,11 @@ class CD_APD_Admin
 		{
 			case 'custom_activate':
 				if ( ! current_user_can('activate_plugins') )
-					wp_die( __('You do not have sufficient permissions to manage plugins for this site.') );
+					wp_die( __( 'You do not have sufficient permissions to manage plugins for this site.' ) );
 
 				check_admin_referer( "custom_activate-{$plugin}" );
 
-				$result = cd_apd_activate_plugin( $plugin, $context );
+				$result = $this->activate_plugin( $plugin, $context );
 				if ( is_wp_error( $result ) ) 
 				{
 					if ( 'unexpected_output' == $result->get_error_code() ) 
@@ -278,15 +365,21 @@ class CD_APD_Admin
 					wp_die( __( 'You do not have sufficient permissions to deactivate plugins for this site.' ) );
 
 				check_admin_referer( "custom_deactivate-{$plugin}" );
-				cd_apd_deactivate_plugins( $plugin, $context );
+
+				$this->deactivate_plugins( $plugin, $context );
+
 				if ( headers_sent() )
+				{
 					printf( 
 						"<meta http-equiv='refresh' content='%s' />",
 						esc_attr( "0;url=plugins.php?deactivate=true&plugin_status={$status}&paged={$page}&s={$s}" )
 					);
+				}
 				else
-					wp_redirect( self_admin_url("plugins.php?deactivate=true&plugin_status={$context}") );
-				exit();
+				{
+					wp_redirect( self_admin_url( "plugins.php?deactivate=true&plugin_status={$context}" ) );
+					exit();
+				}
 				break;
 
 			default:
@@ -297,11 +390,11 @@ class CD_APD_Admin
 
 
 	/**
-	 * Utility function to get the current `plugin_status` key returns 
-	 * false if our key isn't in the the custom directories
+	 * Utility function to get the current `plugin_status`. 
+	 * The key returns FALSE if our key isn't in the the custom directories
 	 * 
-	 * @since 0.1
-	 * @return bool|string False on failure, the `$wp_plugin_directories` key on success
+	 * @since  0.1
+	 * @return bool|string $rv False on failure, the `$wp_plugin_directories` key on success
 	 */
 	public function get_plugin_status()
 	{
@@ -319,6 +412,6 @@ class CD_APD_Admin
 
 		return $rv;
 	}
-} // end class
+} // END Class CD_APD_Admin
 
-new CD_APD_Admin();
+} // endif;
