@@ -221,18 +221,22 @@ class CD_APD_Admin extends CD_APD_Core
 	{
 		$context = $this->get_plugin_status();
 
+		$active = get_option( "active_plugins_{$context}", array() );
+
 		// let's just start over
 		$links = array();
-		$links['activate'] = sprintf(
-			'<a href="%s" title="Activate this plugin">%s</a>',
-			wp_nonce_url( 
-				"plugins.php?action=custom_activate&amp;plugin={$plugin_file}&amp;plugin_status=".esc_attr( $context ), 
-				"custom_activate-{$plugin_file}" 
-			),
-			__( 'Activate' )
-		);
+		if ( ! in_array( $plugin_file, $active ) )
+		{
+			$links['activate'] = sprintf(
+				'<a href="%s" title="Activate this plugin">%s</a>',
+				wp_nonce_url( 
+					"plugins.php?action=custom_activate&amp;plugin={$plugin_file}&amp;plugin_status=".esc_attr( $context ), 
+					"custom_activate-{$plugin_file}" 
+				),
+				__( 'Activate' )
+			);
+		}
 
-		$active = get_option( "active_plugins_{$context}", array() );
 		if ( in_array( $plugin_file, $active ) )
 		{
 			$links['deactivate'] = sprintf(

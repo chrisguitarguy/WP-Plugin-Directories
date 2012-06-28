@@ -4,9 +4,9 @@
 Plugin Name:  Additional Plugin Directories
 Plugin URI:   http://github.com/chrisguitarguy
 Description:  A framework to allow adding additional plugin directories to WordPress
-Version:      0.5.2
+Version:      0.6
 Author:       Christopher Davis
-Contributors: Franz Josef Kaiser
+Contributors: Franz Josef Kaiser, Julien Chaumond
 Author URI:   http://christopherdavis.me
 License:      GPL2
 */
