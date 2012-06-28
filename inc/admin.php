@@ -265,11 +265,21 @@ class CD_APD_Admin extends CD_APD_Core
 		if ( 'plugins.php' !== $screen )
 			return;
 
+		// Allow remote file directories
+		$subject = plugin_dir_url( __FILE__ );
+		$search  = basename( plugin_dir_url( __FILE__ ) );
+		$url     = substr_replace( 
+			 $subject
+			,"js"
+			,strrpos( $subject, $search )
+			,strlen( $search ) 
+		);
+
 		wp_enqueue_script(
-			'cd-apd-js',
-			CD_APD_URL.'js/apd.js',
-			array( 'jquery' ),
-			null
+			 'cd-apd-js'
+			,"{$url}apd.js"
+			,array( 'jquery' )
+			,null
 		);
 		wp_localize_script(
 			'cd-apd-js',
