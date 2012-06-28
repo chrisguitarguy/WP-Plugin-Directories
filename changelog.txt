@@ -20,3 +20,5 @@ Added the "adp_root_{$root}" filter to allow completely custom locations. Moved 
 Fix script path for remote locations.
 *0.7.2*
 Renamed main plugin file to index.php to avoid accidental directory listing.
+*0.7.3*
+Reverted 0.7.2 to avoid plugin deactivation. Added index.html file instead.
