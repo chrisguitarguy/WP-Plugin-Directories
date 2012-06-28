@@ -125,8 +125,11 @@ function _get_new_plugin_directory_root( $root )
 			break;
 
 		case 'content' :
-		default :
 			$root = WP_CONTENT_DIR;
+			break;
+
+		default :
+			$root = apply_filters( "adp_root_{$root}", WP_CONTENT_DIR );
 			break;
 	}
 
