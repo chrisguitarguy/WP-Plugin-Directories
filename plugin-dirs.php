@@ -1,22 +1,24 @@
 <?php
-! defined( 'ABSPATH' ) && exit();
+! defined( 'ABSPATH' ) AND exit();
 /*
-Plugin Name: Additional Plugin Directories
-Plugin URI:  http://github.com/chrisguitarugy
-Description: A framework for adding additional plugin directories to WordPress
-Version:     0.1
-Author:      Christopher Davis
-Author URI:  http://christopherdavis.me
-License:     GPL2
+Plugin Name:  Additional Plugin Directories
+Plugin URI:   http://github.com/chrisguitarguy
+Description:  A framework to allow adding additional plugin directories to WordPress
+Version:      0.5
+Author:       Christopher Davis
+Contributors: Franz Josef Kaiser
+Author URI:   http://christopherdavis.me
+License:      GPL2
 */
 
 
 define( 'CD_APD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CD_APD_URL', plugin_dir_url( __FILE__ ) );
 
+require_once( CD_APD_PATH.'inc/api.php' );
 require_once( CD_APD_PATH.'inc/core.php' );
 
-if( is_admin() )
+if ( is_admin() )
 {
 	require_once( CD_APD_PATH.'inc/admin.php' );
 }
