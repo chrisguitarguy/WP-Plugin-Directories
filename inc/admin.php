@@ -5,7 +5,6 @@
 
 if ( ! class_exists( 'CD_APD_Admin' ) )
 {
-	add_action( 'plugins_loaded', array( 'CD_APD_Admin', 'instance' ) );
 
 /**
  * Admin/Factory
@@ -81,7 +80,7 @@ class CD_APD_Admin extends CD_APD_Core
 	 */
 	public function __construct()
 	{
-		add_action( 'plugins_loaded', array( $this, 'setup_actions' ), 1 );
+		add_action( 'plugins_loaded', array( $this, 'setup_actions' ), 11 );
 		add_action( 'load-plugins.php', array( $this, 'init' ) );
 	}
 
@@ -254,7 +253,10 @@ class CD_APD_Admin extends CD_APD_Core
 
 
 	/**
-	 * Enqueues on JS file for fun hacks
+	 * Enqueues on JS file for fun hacks.
+	 * 
+	 * @uses filemtime() to set the version number of files 
+	 * to their last changed date to prevent caching.
 	 * 
 	 * @since  0.1
 	 * @uses   wp_enqueue_script()
@@ -265,21 +267,11 @@ class CD_APD_Admin extends CD_APD_Core
 		if ( 'plugins.php' !== $screen )
 			return;
 
-		// Allow remote file directories
-		$subject = plugin_dir_url( __FILE__ );
-		$search  = basename( plugin_dir_url( __FILE__ ) );
-		$url     = substr_replace( 
-			 $subject
-			,"js"
-			,strrpos( $subject, $search )
-			,strlen( $search ) 
-		);
-
 		wp_enqueue_script(
 			 'cd-apd-js'
-			,"{$url}apd.js"
+			,$this->scripts_file_cb( 'url' )."apd.js"
 			,array( 'jquery' )
-			,null
+			,filemtime( $this->scripts_file_cb( 'path' )."apd.js" )
 		);
 		wp_localize_script(
 			'cd-apd-js',
@@ -287,6 +279,27 @@ class CD_APD_Admin extends CD_APD_Core
 			array(
 				'count' => esc_js( $this->all_count )
 			)
+		);
+	}
+
+
+	/**
+	 * Callback to get the Path or URl to register scripts.
+	 * 
+	 * @since  0.7.3
+	 * @param  string $case (Valid are:) 'path', 'url'
+	 * @param  string $sub_dir Defaults to: 'js'
+	 * @return string
+	 */
+	public function scripts_file_cb( $case, $sub_dir = 'js' )
+	{
+		$root = 'path' === $case ? plugin_dir_path( __FILE__ ) : plugin_dir_url( __FILE__ );
+
+		return substr_replace( 
+			 $root
+			,$sub_dir
+			,strrpos( $root, basename( $root ) )
+			,strlen( basename( $root ) ) 
 		);
 	}
 
