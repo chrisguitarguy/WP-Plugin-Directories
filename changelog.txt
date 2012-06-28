@@ -16,3 +16,7 @@ JS styling for readability.
 Removed "activate" link when plugin is already active, as suggested by Julien Chaumond in Issue #3.
 *0.7*
 Added the "adp_root_{$root}" filter to allow completely custom locations. Moved changelog to separate file.
+*0.7.1*
+Fix script path for remote locations.
+*0.7.2*
+Renamed main plugin file to index.php to avoid accidental directory listing.
