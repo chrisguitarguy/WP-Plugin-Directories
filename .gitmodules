@@ -1,0 +1,4 @@
+
+[submodule "inc/updater"]
+	path = inc/updater
+	url = git://github.com/franz-josef-kaiser/WordPress-GitHub-Plugin-Updater.git

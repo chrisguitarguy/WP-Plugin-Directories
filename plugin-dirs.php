@@ -1,10 +1,10 @@
 <?php
 ! defined( 'ABSPATH' ) AND exit();
 /*
-Plugin Name:  Additional Plugin Directories
+Plugin Name:  Additional Plugin Directories 2
 Plugin URI:   http://github.com/chrisguitarguy
 Description:  A framework to allow adding additional plugin directories to WordPress
-Version:      0.9
+Version:      1.0
 Author:       Christopher Davis
 Contributors: Franz Josef Kaiser, Julien Chaumond
 Author URI:   http://christopherdavis.me
@@ -107,11 +107,67 @@ class CD_APD_Bootstrap
 			class_exists( $class ) AND add_action( 'plugins_loaded', array( $class, 'instance' ) );
 		}
 
+		if ( ! is_admin() )
+			return;
+
+		// Updates from GitHub
+		// $ git submodule add git://github.com/franz-josef-kaiser/WordPress-GitHub-Plugin-Updater inc/updater
+		add_action( 'admin_init', array( $this, 'update_from_github' ) );
+
 		// Better update message
 		$folder	= basename( dirname( __FILE__ ) );
 		$file	= basename( __FILE__ );
 		$hook = "in_plugin_update_message-{$folder}/{$file}";
 		add_action( $hook, array( $this, 'update_message' ), 20, 2 );
+	}
+
+
+	/**
+	 * 
+	 * @since 1.0
+	 * 
+	 * @return void
+	 */
+	public function update_from_github()
+	{
+		if ( 'plugins.php' !== $GLOBALS['pagenow'] )
+			return;
+
+		global $wp_version;
+
+		// Load the updater
+		include_once plugin_dir_path( __FILE__ ).'inc/updater/updater.php';
+
+		// Fix this strange WP bug(?)
+		add_action( 'http_request_args', array( $this, 'update_request_args' ), 0, 2 );
+
+		$host	= 'github.com';
+		$http	= 'https://';
+		$name	= 'franz-josef-kaiser';
+		$repo	= 'WP-Plugin-Directories';
+		new wp_github_updater( array(
+			 'slug'               => plugin_basename( __FILE__ )
+			,'proper_folder_name' => dirname( plugin_basename(__FILE__) ) #plugin_basename( __FILE__ )
+			,'api_url'            => "{$http}api.{$host}/repos/{$name}/{$repo}"
+			,'raw_url'            => "{$http}raw.{$host}/{$name}/{$repo}/master"
+			,'github_url'         => "{$http}{$host}/{$name}/{$repo}"
+			,'zip_url'            => "{$http}{$host}/{$name}/{$repo}/zipball/master"
+			,'sslverify'          => true
+			,'requires'           => $wp_version
+			,'tested'             => $wp_version
+			,'readme_file'        => 'readme.md'
+		) );
+	}
+
+
+	public function update_request_args( $args, $url )
+	{
+		// Only needed once - this saves us checking the $url
+		remove_filter( current_filter(), __FUNCTION__ );
+
+		return array_merge( $args, array(
+			'sslverify' => false
+		) );
 	}
 
 
