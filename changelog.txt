@@ -24,3 +24,5 @@ Renamed main plugin file to index.php to avoid accidental directory listing.
 Reverted 0.7.2 to avoid plugin deactivation. Added index.html file instead.
 *0.8*
 Moved Bootstrap to OOP construct. Regular child plugins are now allowed to use the default priority.
+*0.9*
+Added better update message (as seen here).
