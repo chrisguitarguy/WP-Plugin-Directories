@@ -4,7 +4,7 @@
 Plugin Name:  Additional Plugin Directories
 Plugin URI:   http://github.com/chrisguitarguy
 Description:  A framework to allow adding additional plugin directories to WordPress
-Version:      1.0
+Version:      1.1
 Author:       Christopher Davis
 Contributors: Franz Josef Kaiser, Julien Chaumond
 Author URI:   http://christopherdavis.me
@@ -61,7 +61,7 @@ class CD_APD_Bootstrap
 	 * 
 	 * @var (string)
 	 */
-	public $remote_changelog = 'https://raw.github.com/chrisguitarguy/WP-Plugin-Directories/master/changelog.txt';
+	public $remote_changelog = 'https://raw.github.com/chrisguitarguy/WP-Plugin-Directories/master/changelog.html';
 
 
 	/**
@@ -138,7 +138,7 @@ class CD_APD_Bootstrap
 		$repo	= 'WP-Plugin-Directories';
 		new wp_github_updater( array(
 			 'slug'               => plugin_basename( __FILE__ )
-			,'proper_folder_name' => dirname( plugin_basename(__FILE__) ) #plugin_basename( __FILE__ )
+			,'proper_folder_name' => dirname( plugin_basename(__FILE__) )
 			,'api_url'            => "{$http}api.{$host}/repos/{$name}/{$repo}"
 			,'raw_url'            => "{$http}raw.{$host}/{$name}/{$repo}/master"
 			,'github_url'         => "{$http}{$host}/{$name}/{$repo}"
@@ -186,14 +186,23 @@ class CD_APD_Bootstrap
 	public function update_message()
 	{
 		// Get `changelog.txt` from GitHub via WP HTTP API
-		$changelog = wp_remote_get( $this->remote_changelog );
+		$remote_data = wp_remote_get( 
+			 $this->remote_changelog
+			,false 
+		);
+
 		// Die silently
-		if ( is_wp_error( $changelog ) )
+		$response = wp_remote_retrieve_response_code( $remote_data );
+
+		if ( is_wp_error( $remote_data ) )
 			return _e( 'No changelog could get fetched.', 'cd_apd_textdomain' );
+
+		if ( 404 === $response )
+			return $remote_data['response']['message']; 
 
 		return sprintf( 
 			 "<p style='font-weight:normal;'>%s</p>"
-			,wp_remote_retrieve_body( $changelog )
+			,wp_remote_retrieve_body( $remote_data )
 		);
 	}
 } // END Class CD_APD_Bootstrap
