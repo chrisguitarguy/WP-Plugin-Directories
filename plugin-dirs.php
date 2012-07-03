@@ -4,7 +4,7 @@
 Plugin Name:  Additional Plugin Directories TEST
 Plugin URI:   http://github.com/chrisguitarguy
 Description:  A framework to allow adding additional plugin directories to WordPress
-Version:      0.7
+Version:      1.0
 Author:       Christopher Davis
 Contributors: Franz Josef Kaiser, Julien Chaumond
 Author URI:   http://christopherdavis.me
