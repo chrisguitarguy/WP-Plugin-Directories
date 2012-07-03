@@ -1,7 +1,7 @@
 <?php
 ! defined( 'ABSPATH' ) AND exit();
 /*
-Plugin Name:  Additional Plugin Directories TEST
+Plugin Name:  Additional Plugin Directories
 Plugin URI:   http://github.com/chrisguitarguy
 Description:  A framework to allow adding additional plugin directories to WordPress
 Version:      1.0
@@ -134,7 +134,7 @@ class CD_APD_Bootstrap
 
 		$host	= 'github.com';
 		$http	= 'https://';
-		$name	= 'franz-josef-kaiser';
+		$name	= 'chrisguitarguy';
 		$repo	= 'WP-Plugin-Directories';
 		new wp_github_updater( array(
 			 'slug'               => plugin_basename( __FILE__ )
