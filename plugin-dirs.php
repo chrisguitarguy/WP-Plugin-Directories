@@ -1,7 +1,7 @@
 <?php
 ! defined( 'ABSPATH' ) AND exit();
 /*
-Plugin Name:  Additional Plugin Directories 2
+Plugin Name:  Additional Plugin Directories
 Plugin URI:   http://github.com/chrisguitarguy
 Description:  A framework to allow adding additional plugin directories to WordPress
 Version:      1.0
@@ -112,13 +112,7 @@ class CD_APD_Bootstrap
 
 		// Updates from GitHub
 		// $ git submodule add git://github.com/franz-josef-kaiser/WordPress-GitHub-Plugin-Updater inc/updater
-		add_action( 'admin_init', array( $this, 'update_from_github' ) );
-
-		// Better update message
-		$folder	= basename( dirname( __FILE__ ) );
-		$file	= basename( __FILE__ );
-		$hook = "in_plugin_update_message-{$folder}/{$file}";
-		add_action( $hook, array( $this, 'update_message' ), 20, 2 );
+		add_action( 'init', array( $this, 'update_from_github' ), 0 );
 	}
 
 
@@ -130,9 +124,6 @@ class CD_APD_Bootstrap
 	 */
 	public function update_from_github()
 	{
-		if ( 'plugins.php' !== $GLOBALS['pagenow'] )
-			return;
-
 		global $wp_version;
 
 		// Load the updater
@@ -143,7 +134,7 @@ class CD_APD_Bootstrap
 
 		$host	= 'github.com';
 		$http	= 'https://';
-		$name	= 'franz-josef-kaiser';
+		$name	= 'chrisguitarguy';
 		$repo	= 'WP-Plugin-Directories';
 		new wp_github_updater( array(
 			 'slug'               => plugin_basename( __FILE__ )
@@ -156,10 +147,21 @@ class CD_APD_Bootstrap
 			,'requires'           => $wp_version
 			,'tested'             => $wp_version
 			,'readme_file'        => 'readme.md'
+			,'description'        => array( 
+				'changelog' => $this->update_message()
+			 )
 		) );
 	}
 
 
+	/**
+	 * Callback to set the SSL verification for HTTP requests to GitHub to false
+	 * 
+	 * @since  1.0
+	 * @param  array  $args
+	 * @param  string $url
+	 * @return array  $args
+	 */
 	public function update_request_args( $args, $url )
 	{
 		// Only needed once - this saves us checking the $url
@@ -176,51 +178,22 @@ class CD_APD_Bootstrap
 	 * Shows only the version updates from the current until the newest version
 	 * 
 	 * @uses WordPress HTTP API
+	 * @uses $allowed_html and $allowed_protocolls inside `install_plugin_information()`
 	 * 
 	 * @since  0.9
-	 * @param  array  $plugin_data Data of the plugin itself
-	 * @param  object $r           Data of the remote request to the repo
 	 * @return string The actual Output message
 	 */
-	public function update_message( $plugin_data, $r )
+	public function update_message()
 	{
-		if ( 'plugins.php' !== $GLOBALS['pagenow'] )
-			return;
-
 		// Get `changelog.txt` from GitHub via WP HTTP API
-		$changelog = wp_remote_get( 
-			 $this->remote_changelog
-			,array(
-				// We can't force anyone to alter the `~/.ssh/config` on the server
-				'sslverify' => false 
-			 ) 
-		);
-
+		$changelog = wp_remote_get( $this->remote_changelog );
 		// Die silently
 		if ( is_wp_error( $changelog ) )
-			return;
+			return _e( 'No changelog could get fetched.', 'cd_apd_textdomain' );
 
-		// Only retrieve what's new since the installed version
-		$details = explode( 
-			 '*'
-			,stristr( 
-				 $changelog['body']
-				,"*{$plugin_data['Version']}*" 
-			) 
-		);
-		// Build the update note
-		$whats_new = '';
-		for ( $i = 0; $i < count( $details ); $i++ )
-		{
-			$whats_new .= ( 0 != $i % 2 ) ? "<strong>{$details[ $i ]}" : "</strong><br />{$details[ $i ]}";
-		}
-
-		return printf(
-			 "%sThe Update from %s to %s brings you the following new features, bug fixes and additions.%s"
-			,'<hr />'
-			,"<code>{$plugin_data['Version']}</code>"
-			,"<code>{$r->new_version}</code>"
-			,"<p style='font-weight:normal;'>{$whats_new}</p>"
+		return sprintf( 
+			 "<p style='font-weight:normal;'>%s</p>"
+			,wp_remote_retrieve_body( $changelog )
 		);
 	}
 } // END Class CD_APD_Bootstrap

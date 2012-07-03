@@ -126,7 +126,11 @@ class CD_APD_Admin extends CD_APD_Core
 		// check to see if we're using one of our custom directories
 		if ( $this->get_plugin_status() )
 		{
-			add_filter( "views_{$screen->id}", array( $this, 'views_again' ) );
+			// Disable default "advanced" plugins. Inside the callback, 
+			// the 2nd arg is either for "Must Use" => 'mustuse' and for "DropIns" => 'dropins'.
+			add_filter( 'show_advanced_plugins', '__return_false', 10, 2 );
+
+			#add_filter( "views_{$screen->id}", array( $this, 'views_again' ) );
 			add_filter( 'all_plugins', array( $this, 'filter_plugins' ) );
 			// @TODO: support bulk actions
 			add_filter( "bulk_actions-{$screen->id}", '__return_empty_array' );
@@ -145,12 +149,12 @@ class CD_APD_Admin extends CD_APD_Core
 	 */
 	public function views( $views )
 	{
-		global $wp_plugin_directories;
+		global $wp_plugin_directories, $totals;
 
 		// bail if we don't have any extra dirs
 		if ( empty( $wp_plugin_directories ) ) 
 			return $views;
-
+echo '<pre>'; print_r( $totals ); echo '</pre>';
 		// Add our directories to the action links
 		foreach ( $wp_plugin_directories as $key => $info )
 		{
@@ -183,7 +187,7 @@ class CD_APD_Admin extends CD_APD_Core
 	{
 		if ( isset( $views['inactive'] ) ) 
 			unset( $views['inactive'] );
-
+echo '<pre> '.__LINE__.__FILE__.' '; print_r( $views ); echo '</pre>';
 		return $views;
 	}
 
@@ -405,7 +409,7 @@ class CD_APD_Admin extends CD_APD_Core
 				}
 				break;
 
-			default:
+			default :
 				do_action( "custom_plugin_dir_{$action}" );
 				break;
 		}
