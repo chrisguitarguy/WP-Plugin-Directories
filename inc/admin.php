@@ -10,7 +10,7 @@ if ( ! class_exists( 'CD_APD_Admin' ) )
  * Admin/Factory
  * 
  * @author     Christopher Davis, Franz Josef Kaiser
- * @license    GPL
+ * @license    MIT
  * @copyright  © Christopher Davis, Franz Josef Kaiser 2011-2012
  * 
  * @package    WordPress
