@@ -7,7 +7,7 @@
  * The central API
  * 
  * @author     Christopher Davis, Franz Josef Kaiser
- * @license    GPL
+ * @license    MIT
  * @copyright  © Christopher Davis, Franz Josef Kaiser 2011-2012
  * 
  * @since      0.3

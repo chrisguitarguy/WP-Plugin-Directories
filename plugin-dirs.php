@@ -8,7 +8,7 @@ Version:      1.1
 Author:       Christopher Davis
 Contributors: Franz Josef Kaiser, Julien Chaumond
 Author URI:   http://christopherdavis.me
-License:      GNU GPL 2
+License:      MIT
 */
 
 
@@ -22,7 +22,7 @@ if ( ! class_exists( 'dmb_bootstrap' ) )
  * Bootstrap for delayed Meta Boxes
  * 
  * @author     Franz Josef Kaiser, Christopher Davis
- * @license    GNU GPL 2
+ * @license    MIT
  * @copyright  © Franz Josef Kaiser, Christopher Davis 2011-2012
  * 
  * @package    WordPress
